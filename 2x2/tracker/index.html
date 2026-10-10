@@ -1,0 +1,473 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>2×2 Tracker</title>
+<meta name="description" content="Free training log for the 2×2 Strength system: log two sets, get your next target and know when to add weight.">
+<meta name="theme-color" content="#0a0d12">
+<link rel="stylesheet" href="../../style.css">
+<style>
+body{padding-bottom:84px}
+.wrap{max-width:640px}
+header.top .wrap{flex-wrap:nowrap}
+.hbtn{background:transparent;border:1px solid var(--line);color:var(--muted);font:11px var(--mono);letter-spacing:.08em;padding:6px 10px;cursor:pointer}
+.hbtn:hover{color:var(--gold);border-color:var(--gold-d)}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin:16px 0;border:1px solid var(--line)}
+.tabs button{background:var(--panel2);border:0;border-right:1px solid var(--line);color:var(--muted);font:12px var(--mono);letter-spacing:.08em;text-transform:uppercase;padding:12px 4px;cursor:pointer}
+.tabs button:last-child{border-right:0}
+.tabs button[aria-selected=true]{background:var(--panel);color:var(--gold);box-shadow:inset 0 -2px 0 var(--gold)}
+.seg{display:inline-grid;grid-template-columns:1fr 1fr;border:1px solid var(--gold-d)}
+.seg button{background:transparent;border:0;color:var(--gold);font:700 14px var(--mono);padding:8px 22px;cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--gold);color:#0a0d12}
+.bar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+input,select{background:var(--panel2);color:var(--fg);border:1px solid var(--line);font:16px var(--sans);padding:9px 10px;width:100%;border-radius:0}
+input:focus,select:focus{outline:2px solid var(--gold-d);outline-offset:0;border-color:var(--gold-d)}
+input[type=date]{width:auto;color-scheme:dark}
+.card{border:1px solid var(--line);background:var(--panel);padding:14px;margin:10px 0}
+.ch{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.ch .lbl{font:700 12px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--gold)}
+.ch .rng{font:11px var(--mono);color:var(--muted)}
+.last{font:12px var(--mono);color:var(--muted);margin:8px 0 2px}
+.sug{font:13px var(--mono);margin:2px 0 10px;color:var(--fg)}
+.sug.up{color:var(--green)}
+.sug.warn{color:var(--red)}
+.inputs{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:8px}
+.inputs label{font:10px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.inputs input{margin-top:4px;text-align:center;font:600 18px var(--mono)}
+.hint{border-left:3px solid var(--gold);background:var(--panel2);padding:10px 14px;margin:14px 0;font-size:.9rem;color:#c9ccd1}
+.save{width:100%;margin:12px 0 0;padding:14px;font-size:13px;border:0;cursor:pointer}
+.err{color:var(--red);font:12px var(--mono);min-height:1em;margin-top:8px}
+.sess{border:1px solid var(--line);background:var(--panel);padding:12px 14px;margin:8px 0}
+.sess .sh{display:flex;justify-content:space-between;align-items:center;gap:8px;font:12px var(--mono);color:var(--muted)}
+.sess .sh b{color:var(--gold)}
+.sess ul{list-style:none;margin:8px 0 0;padding:0;font-size:.92rem}
+.sess li{display:flex;justify-content:space-between;gap:8px;padding:3px 0;border-bottom:1px dashed var(--line)}
+.sess li:last-child{border-bottom:0}
+.sess li span:last-child{font-family:var(--mono);color:#c9ccd1;white-space:nowrap}
+.del{background:transparent;border:1px solid #6b2a24;color:var(--red);font:10px var(--mono);padding:3px 8px;cursor:pointer}
+.prog{width:100%;border-collapse:collapse;font-size:.88rem;margin:8px 0}
+.prog td{border-bottom:1px solid var(--line);padding:7px 4px;vertical-align:top}
+.prog td:last-child{font-family:var(--mono);text-align:right;white-space:nowrap}
+.prog .up{color:var(--green)}
+.set{border:1px solid var(--line);background:var(--panel);padding:14px;margin:10px 0}
+.set h3{margin:0 0 8px;font:700 12px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--gold)}
+.opts{display:flex;gap:8px;flex-wrap:wrap}
+.opts label{display:flex;align-items:center;gap:6px;border:1px solid var(--line);padding:8px 12px;cursor:pointer;font-size:.95rem}
+.opts input{width:auto}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap}
+.btnrow .btn{margin:0;border:0;cursor:pointer}
+.btn.danger{background:transparent;color:var(--red);border:1px solid #6b2a24}
+.muted{color:var(--muted);font-size:.88rem}
+.empty{color:var(--muted);text-align:center;padding:24px 0}
+.timer{position:fixed;left:0;right:0;bottom:0;background:#07090d;border-top:1px solid var(--line);padding:10px 16px calc(10px + env(safe-area-inset-bottom))}
+.timer .wrap{display:flex;align-items:center;gap:8px;padding:0}
+.timer .clock{font:700 22px var(--mono);color:var(--fg);min-width:72px}
+.timer .clock.run{color:var(--gold)}
+.timer.done{animation:flash 1s 3}
+@keyframes flash{50%{background:#3a2a0c}}
+.timer button{background:var(--panel2);border:1px solid var(--line);color:var(--fg);font:12px var(--mono);padding:9px 0;flex:1;cursor:pointer}
+.timer button.stop{color:var(--red);border-color:#6b2a24}
+.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:var(--gold);color:#0a0d12;font:700 12px var(--mono);letter-spacing:.06em;padding:10px 16px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:9}
+.toast.show{opacity:1}
+.warnbox{border:1px solid #6b2a24;background:rgba(209,73,60,.08);color:#e9b1aa;padding:10px 14px;margin-top:12px;font-size:.88rem}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+<a class="brand" href="../index.html" id="brandlink">2×2 TRACKER<small id="tagline"></small></a>
+<button class="hbtn" id="langbtn" type="button"></button>
+</div></header>
+
+<main class="wrap">
+<div id="storagewarn" class="warnbox" hidden></div>
+<div class="tabs" role="tablist">
+<button role="tab" data-tab="log" id="tab-log"></button>
+<button role="tab" data-tab="hist" id="tab-hist"></button>
+<button role="tab" data-tab="set" id="tab-set"></button>
+</div>
+<div id="view"></div>
+</main>
+
+<div class="timer" id="timer"><div class="wrap">
+<span class="clock" id="clock">0:00</span>
+<button type="button" data-rest="60">60s</button>
+<button type="button" data-rest="90">90s</button>
+<button type="button" data-rest="120">2m</button>
+<button type="button" data-rest="180">3m</button>
+<button type="button" class="stop" id="stopbtn">■</button>
+</div></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+'use strict';
+
+/* ---------- catalog ---------- */
+var SLOTS=[
+ {id:'legs',n:'1'},{id:'chest',n:'2a'},{id:'row',n:'2b'},{id:'ohp',n:'3a'},{id:'pull',n:'3b'}
+];
+var CAT={
+ goblet:{slot:'legs',g:'squat',en:'Goblet squat',pl:'Przysiad goblet'},
+ bulgarian:{slot:'legs',g:'squat',side:1,en:'Bulgarian split squat',pl:'Przysiad bułgarski'},
+ bbsquat:{slot:'legs',g:'squat',en:'Barbell back squat',pl:'Przysiad ze sztangą'},
+ legpress:{slot:'legs',g:'squat',en:'Leg press',pl:'Prasa nożna'},
+ rdl:{slot:'legs',g:'hinge',en:'Dumbbell Romanian deadlift',pl:'Martwy ciąg rumuński (hantle)'},
+ bbrdl:{slot:'legs',g:'hinge',en:'Barbell Romanian deadlift',pl:'Martwy ciąg rumuński (sztanga)'},
+ slrdl:{slot:'legs',g:'hinge',side:1,en:'Single-leg Romanian deadlift',pl:'Martwy ciąg rumuński na jednej nodze'},
+ flat:{slot:'chest',en:'Flat dumbbell bench press',pl:'Wyciskanie hantli płasko'},
+ incline:{slot:'chest',en:'Incline dumbbell press',pl:'Wyciskanie hantli na skosie'},
+ bbbench:{slot:'chest',en:'Barbell bench press',pl:'Wyciskanie sztangi'},
+ machine:{slot:'chest',en:'Chest press machine',pl:'Maszyna do wyciskania'},
+ pushup:{slot:'chest',bw:1,en:'Push-up',pl:'Pompki'},
+ onearm:{slot:'row',side:1,en:'One-arm dumbbell row',pl:'Wiosłowanie hantlą jednorącz'},
+ chestsup:{slot:'row',en:'Chest-supported dumbbell row',pl:'Wiosłowanie na ławce skośnej'},
+ cable:{slot:'row',en:'Seated cable row',pl:'Wiosłowanie na wyciągu'},
+ bbrow:{slot:'row',en:'Barbell bent-over row',pl:'Wiosłowanie sztangą w opadzie'},
+ seated:{slot:'ohp',en:'Seated dumbbell shoulder press',pl:'Wyciskanie hantli siedząc'},
+ standing:{slot:'ohp',en:'Standing dumbbell overhead press',pl:'Wyciskanie hantli stojąc'},
+ bbohp:{slot:'ohp',en:'Standing barbell overhead press',pl:'Wyciskanie sztangi stojąc'},
+ landmine:{slot:'ohp',side:1,en:'Single-arm landmine press',pl:'Landmine jednorącz'},
+ pullup:{slot:'pull',bw:1,en:'Pull-up (overhand)',pl:'Podciąganie nachwytem'},
+ chinup:{slot:'pull',bw:1,en:'Chin-up',pl:'Podciąganie podchwytem'},
+ neutral:{slot:'pull',bw:1,en:'Neutral-grip pull-up',pl:'Podciąganie chwytem neutralnym'},
+ pulldown:{slot:'pull',en:'Lat pulldown',pl:'Ściąganie drążka'},
+ banded:{slot:'pull',bw:1,en:'Band-assisted pull-up',pl:'Podciąganie z gumą'}
+};
+var BLOCKS={std:[6,10],strength:[4,6],volume:[10,15],start:[8,12]};
+var DEF_VAR={A:{legs:'goblet',chest:'flat',row:'onearm',ohp:'seated',pull:'pullup'},
+             B:{legs:'rdl',chest:'incline',row:'chestsup',ohp:'standing',pull:'chinup'}};
+
+/* ---------- i18n ---------- */
+var T={
+en:{tagline:'// 2×2 STRENGTH LOG',lang:'PL',log:'Workout',hist:'History',set:'Settings',
+ workout:'Workout',date:'Date',hint:'Set 1: stop with 1–2 reps in reserve. Set 2: go to technical failure (0–1 in reserve).',
+ legs:'Legs',chest:'Chest press',row:'Row',ohp:'Overhead press',pull:'Pull-up',
+ reps:'reps',perSide:'per side',weight:'Weight',added:'Added wt',set1:'Set 1',set2:'Set 2',bw:'BW',
+ last:'Last',first:'First time: pick a weight you can lift for about {lo} reps.',
+ up:'▲ Add weight: {w} · aim {a1} / {a2}',same:'Beat it: {w} · aim {a1} / {a2}',
+ heavy:'Below the range: keep {w} or go lighter · aim {a1} / {a2}',
+ save:'Save workout',saved:'Workout saved',nothing:'Nothing to save yet: enter at least set 1 for one exercise.',
+ needW:'Enter a weight for: {x}',needS1:'Enter set 1 for: {x}',
+ progress:'Progress',sessions:'Sessions',noData:'No workouts logged yet.',del:'Delete',confirmDel:'Delete this workout?',
+ units:'Units',inc:'Weight increment',block:'Rep range',
+ bStd:'Standard 6–10 (pull-ups 5–10)',bStrength:'Strength block 4–6',bVolume:'Volume block 10–15',bStart:'Easy start / 40+ 8–12',
+ language:'Language',backup:'Backup',exp:'Export',imp:'Import',reset:'Delete all data',
+ backupNote:'Your data is stored only in this browser on this device. Export a backup now and then.',
+ confirmImp:'Replace all current data with the imported file?',badFile:'This file is not a valid 2×2 Tracker backup.',
+ imported:'Backup imported',confirmReset:'Delete ALL workouts and settings? This cannot be undone.',
+ storage:'Storage is unavailable in this browser (private mode?). Your workouts will be lost when you close the page. Use Export to keep them.',
+ rest:'Rest over',about:'About the 2×2 system',fromTo:'{a} → {b}'},
+pl:{tagline:'// DZIENNIK 2×2',lang:'EN',log:'Trening',hist:'Historia',set:'Ustawienia',
+ workout:'Trening',date:'Data',hint:'Seria 1: skończ z 1–2 powtórzeniami w zapasie. Seria 2: do granicy technicznej (0–1 w zapasie).',
+ legs:'Nogi',chest:'Klatka',row:'Wiosłowanie',ohp:'Barki',pull:'Podciąganie',
+ reps:'powt.',perSide:'na stronę',weight:'Ciężar',added:'Obciążenie',set1:'Seria 1',set2:'Seria 2',bw:'MC',
+ last:'Ostatnio',first:'Pierwszy raz: wybierz ciężar na około {lo} powtórzeń.',
+ up:'▲ Dołóż ciężar: {w} · cel {a1} / {a2}',same:'Pobij to: {w} · cel {a1} / {a2}',
+ heavy:'Poniżej zakresu: zostań przy {w} albo zmniejsz · cel {a1} / {a2}',
+ save:'Zapisz trening',saved:'Trening zapisany',nothing:'Nie ma czego zapisać: wpisz przynajmniej serię 1 w jednym ćwiczeniu.',
+ needW:'Wpisz ciężar dla: {x}',needS1:'Wpisz serię 1 dla: {x}',
+ progress:'Postępy',sessions:'Treningi',noData:'Nie zapisano jeszcze żadnego treningu.',del:'Usuń',confirmDel:'Usunąć ten trening?',
+ units:'Jednostki',inc:'Skok ciężaru',block:'Zakres powtórzeń',
+ bStd:'Standard 6–10 (podciąganie 5–10)',bStrength:'Blok siłowy 4–6',bVolume:'Blok objętościowy 10–15',bStart:'Łagodny start / 40+ 8–12',
+ language:'Język',backup:'Kopia zapasowa',exp:'Eksportuj',imp:'Importuj',reset:'Usuń wszystkie dane',
+ backupNote:'Dane są zapisane tylko w tej przeglądarce na tym urządzeniu. Co jakiś czas eksportuj kopię.',
+ confirmImp:'Zastąpić wszystkie obecne dane danymi z pliku?',badFile:'To nie jest prawidłowa kopia Trackera 2×2.',
+ imported:'Kopia zaimportowana',confirmReset:'Usunąć WSZYSTKIE treningi i ustawienia? Tego nie da się cofnąć.',
+ storage:'Ta przeglądarka nie pozwala zapisywać danych (tryb prywatny?). Treningi znikną po zamknięciu strony. Użyj eksportu, żeby je zachować.',
+ rest:'Koniec przerwy',about:'O systemie 2×2',fromTo:'{a} → {b}'}
+};
+
+/* ---------- state & storage ---------- */
+var KEY='twobytwo.v1',storageOk=true;
+try{localStorage.setItem(KEY+'.t','1');localStorage.removeItem(KEY+'.t')}catch(e){storageOk=false}
+
+function defaults(){
+ return {v:1,settings:{unit:'lb',incLb:5,incKg:2.5,block:'std',lang:null,variants:JSON.parse(JSON.stringify(DEF_VAR))},sessions:[],draft:null};
+}
+function load(){
+ var s=defaults(),raw=null;
+ if(storageOk){try{raw=JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){raw=null}}
+ return raw?merge(s,raw):s;
+}
+function merge(s,raw){
+ if(raw.settings&&typeof raw.settings==='object'){
+  var rs=raw.settings;
+  if(rs.unit==='kg'||rs.unit==='lb')s.settings.unit=rs.unit;
+  if(num(rs.incLb)>0)s.settings.incLb=num(rs.incLb);
+  if(num(rs.incKg)>0)s.settings.incKg=num(rs.incKg);
+  if(BLOCKS[rs.block])s.settings.block=rs.block;
+  if(rs.lang==='en'||rs.lang==='pl')s.settings.lang=rs.lang;
+  ['A','B'].forEach(function(w){SLOTS.forEach(function(sl){
+   var v=rs.variants&&rs.variants[w]&&rs.variants[w][sl.id];
+   if(CAT[v]&&CAT[v].slot===sl.id)s.settings.variants[w][sl.id]=v;
+  })});
+ }
+ if(Array.isArray(raw.sessions))s.sessions=raw.sessions.map(cleanSession).filter(Boolean);
+ if(raw.draft&&typeof raw.draft==='object')s.draft=raw.draft;
+ return s;
+}
+function cleanSession(x){
+ if(!x||!Array.isArray(x.entries)||!/^\d{4}-\d{2}-\d{2}$/.test(String(x.date)))return null;
+ var entries=x.entries.filter(function(e){return e&&CAT[e.ex]&&num(e.s1)>=0}).map(function(e){
+  return {slot:CAT[e.ex].slot,ex:e.ex,w:Math.max(0,num(e.w)||0),s1:Math.round(num(e.s1)),s2:num(e.s2)>=0?Math.round(num(e.s2)):null};
+ });
+ if(!entries.length)return null;
+ return {id:num(x.id)||Date.now()+Math.random(),date:x.date,workout:x.workout==='B'?'B':'A',unit:x.unit==='kg'?'kg':'lb',entries:entries};
+}
+function persist(){
+ if(!storageOk)return;
+ try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){storageOk=false;showStorageWarn()}
+}
+function num(v){if(v===null||v===undefined||v==='')return NaN;return parseFloat(String(v).replace(',','.'))}
+
+var state=load();
+var params=new URLSearchParams(location.search);
+var lang=params.get('lang')==='pl'||params.get('lang')==='en'?params.get('lang'):(state.settings.lang||((navigator.language||'en').toLowerCase().indexOf('pl')===0?'pl':'en'));
+var tab='log';
+
+/* ---------- helpers ---------- */
+function t(k,vars){var s=(T[lang][k]!==undefined?T[lang][k]:T.en[k])||k;if(vars)Object.keys(vars).forEach(function(v){s=s.split('{'+v+'}').join(vars[v])});return s}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function exName(id){return CAT[id]?CAT[id][lang]:id}
+function today(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function unit(){return state.settings.unit}
+function inc(){return unit()==='kg'?state.settings.incKg:state.settings.incLb}
+function nfmt(n){return Number(n).toLocaleString(lang==='pl'?'pl-PL':'en-US',{maximumFractionDigits:2})}
+function conv(w,from,to){
+ if(from===to)return w;
+ var x=from==='kg'?w*2.20462:w/2.20462;
+ return to==='lb'?Math.round(x):Math.round(x*2)/2;
+}
+function fmtW(w,ex){
+ if(CAT[ex]&&CAT[ex].bw&&!w)return t('bw');
+ return (CAT[ex]&&CAT[ex].bw?'+':'')+nfmt(w)+' '+unit();
+}
+function range(ex){
+ var b=state.settings.block;
+ if(b==='std'&&CAT[ex]&&CAT[ex].slot==='pull'&&CAT[ex].bw)return [5,10];
+ return BLOCKS[b];
+}
+function sorted(){
+ return state.sessions.slice().sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:a.id-b.id});
+}
+function fmtDate(d){
+ var p=d.split('-');var dt=new Date(+p[0],+p[1]-1,+p[2]);
+ return dt.toLocaleDateString(lang==='pl'?'pl-PL':'en-US',{day:'numeric',month:'short',year:'numeric'});
+}
+function lastEntry(ex){
+ var s=sorted();
+ for(var i=s.length-1;i>=0;i--){for(var j=0;j<s[i].entries.length;j++){if(s[i].entries[j].ex===ex)return {e:s[i].entries[j],s:s[i]}}}
+ return null;
+}
+function suggest(ex){
+ var L=lastEntry(ex),r=range(ex),lo=r[0],hi=r[1];
+ if(!L)return {kind:'first',lo:lo};
+ var w=conv(L.e.w,L.s.unit,unit()),s1=L.e.s1,s2=L.e.s2;
+ if(s2!==null&&s1>=hi&&s2>=hi)return {kind:'up',w:Math.round((w+inc())*100)/100,a1:lo,a2:lo,L:L};
+ var a1=s1,a2=s2===null?Math.max(0,s1-1):s2;
+ if(a2<a1)a2++;else if(a1<hi)a1++;else a2++;
+ a1=Math.min(a1,hi);a2=Math.min(a2,hi);
+ return {kind:s1<lo?'heavy':'same',w:w,a1:a1,a2:a2,L:L};
+}
+function nextWorkout(){var s=sorted();return s.length&&s[s.length-1].workout==='A'?'B':'A'}
+function draft(){
+ if(!state.draft||!state.draft.values||typeof state.draft.values!=='object'||(state.draft.workout!=='A'&&state.draft.workout!=='B'))state.draft={workout:nextWorkout(),date:today(),values:{}};
+ return state.draft;
+}
+function toast(msg){var el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(toast.h);toast.h=setTimeout(function(){el.classList.remove('show')},1800)}
+function showStorageWarn(){var w=document.getElementById('storagewarn');w.textContent=t('storage');w.hidden=storageOk}
+
+/* ---------- render ---------- */
+var view=document.getElementById('view');
+function render(){
+ document.documentElement.lang=lang;
+ document.getElementById('tagline').textContent=t('tagline');
+ document.getElementById('langbtn').textContent=t('lang');
+ document.getElementById('brandlink').href=lang==='pl'?'../pl.html':'../index.html';
+ ['log','hist','set'].forEach(function(k){var b=document.getElementById('tab-'+k);b.textContent=t(k);b.setAttribute('aria-selected',String(tab===k))});
+ showStorageWarn();
+ if(tab==='log')renderLog();else if(tab==='hist')renderHist();else renderSet();
+}
+
+function renderLog(){
+ var d=draft(),w=d.workout,h='';
+ h+='<div class="bar"><div class="seg" role="group" aria-label="'+esc(t('workout'))+'">'+
+  ['A','B'].map(function(x){return '<button type="button" data-wk="'+x+'" aria-pressed="'+(w===x)+'">'+esc(t('workout'))+' '+x+'</button>'}).join('')+
+  '</div><input type="date" id="date" value="'+esc(d.date)+'" aria-label="'+esc(t('date'))+'"></div>';
+ h+='<div class="hint">'+esc(t('hint'))+'</div>';
+ SLOTS.forEach(function(sl){
+  var ex=(d.values[sl.id]&&CAT[d.values[sl.id].ex]&&CAT[d.values[sl.id].ex].slot===sl.id)?d.values[sl.id].ex:state.settings.variants[w][sl.id];
+  var c=CAT[ex],r=range(ex),g=suggest(ex),v=d.values[sl.id]||{};
+  var opts=Object.keys(CAT).filter(function(k){var o=CAT[k];return o.slot===sl.id&&(sl.id!=='legs'||o.g===(w==='A'?'squat':'hinge'))});
+  if(opts.indexOf(ex)<0)opts.unshift(ex);
+  h+='<div class="card" data-slot="'+sl.id+'">';
+  h+='<div class="ch"><span class="lbl">'+sl.n+' · '+esc(t(sl.id))+'</span><span class="rng">'+r[0]+'–'+r[1]+' '+esc(t('reps'))+(c.side?' · '+esc(t('perSide')):'')+'</span></div>';
+  h+='<select data-k="ex" aria-label="'+esc(t(sl.id))+'">'+opts.map(function(k){return '<option value="'+k+'"'+(k===ex?' selected':'')+'>'+esc(exName(k))+'</option>'}).join('')+'</select>';
+  if(g.L)h+='<div class="last">'+esc(t('last'))+': '+esc(fmtW(conv(g.L.e.w,g.L.s.unit,unit()),ex))+' · '+g.L.e.s1+(g.L.e.s2!==null?' / '+g.L.e.s2:'')+' ('+esc(fmtDate(g.L.s.date))+')</div>';
+  var sug=g.kind==='first'?t('first',{lo:g.lo}):t(g.kind,{w:fmtW(g.w,ex),a1:g.a1,a2:g.a2});
+  h+='<div class="sug'+(g.kind==='up'?' up':g.kind==='heavy'?' warn':'')+'">'+esc(sug)+'</div>';
+  var wv=v.w!==undefined?v.w:(g.kind==='first'||(c.bw&&!g.w)?'':String(g.w));
+  h+='<div class="inputs">'+
+   '<label>'+esc(c.bw?t('added'):t('weight'))+' ('+unit()+')<input data-k="w" inputmode="decimal" autocomplete="off" value="'+esc(wv)+'"'+(c.bw?' placeholder="0"':'')+'></label>'+
+   '<label>'+esc(t('set1'))+'<input data-k="s1" inputmode="numeric" autocomplete="off" value="'+esc(v.s1||'')+'" placeholder="'+(g.a1||'')+'"></label>'+
+   '<label>'+esc(t('set2'))+'<input data-k="s2" inputmode="numeric" autocomplete="off" value="'+esc(v.s2||'')+'" placeholder="'+(g.a2||'')+'"></label>'+
+   '</div></div>';
+ });
+ h+='<button type="button" class="btn save" id="savebtn">'+esc(t('save'))+'</button><div class="err" id="err" role="alert"></div>';
+ h+='<p class="muted" style="margin-top:20px"><a href="'+(lang==='pl'?'../pl.html':'../index.html')+'">'+esc(t('about'))+'</a></p>';
+ view.innerHTML=h;
+}
+
+function renderHist(){
+ var s=sorted(),h='';
+ if(!s.length){view.innerHTML='<p class="empty">'+esc(t('noData'))+'</p>';return}
+ var firsts={},lasts={},order=[];
+ s.forEach(function(x){x.entries.forEach(function(e){if(!firsts[e.ex]){firsts[e.ex]={e:e,s:x};order.push(e.ex)}lasts[e.ex]={e:e,s:x}})});
+ h+='<div class="set"><h3>'+esc(t('progress'))+'</h3><table class="prog">';
+ order.forEach(function(ex){
+  var a=firsts[ex],b=lasts[ex];
+  var fa=fmtW(conv(a.e.w,a.s.unit,unit()),ex)+' · '+a.e.s1+(a.e.s2!==null?'/'+a.e.s2:'');
+  var fb=fmtW(conv(b.e.w,b.s.unit,unit()),ex)+' · '+b.e.s1+(b.e.s2!==null?'/'+b.e.s2:'');
+  var better=a.e!==b.e&&conv(b.e.w,b.s.unit,'kg')>conv(a.e.w,a.s.unit,'kg')||(b.e.w===a.e.w&&(b.e.s1+(b.e.s2||0))>(a.e.s1+(a.e.s2||0)));
+  h+='<tr><td>'+esc(exName(ex))+'</td><td'+(better?' class="up"':'')+'>'+esc(a.e===b.e?fb:t('fromTo',{a:fa,b:fb}))+'</td></tr>';
+ });
+ h+='</table></div><p class="label" style="margin-top:20px">// '+esc(t('sessions'))+'</p>';
+ s.slice().reverse().forEach(function(x){
+  h+='<div class="sess"><div class="sh"><span><b>'+esc(t('workout'))+' '+x.workout+'</b> · '+esc(fmtDate(x.date))+'</span><button type="button" class="del" data-del="'+x.id+'">'+esc(t('del'))+'</button></div><ul>';
+  x.entries.forEach(function(e){
+   h+='<li><span>'+esc(exName(e.ex))+'</span><span>'+esc(fmtW(conv(e.w,x.unit,unit()),e.ex))+' · '+e.s1+(e.s2!==null?' / '+e.s2:'')+'</span></li>';
+  });
+  h+='</ul></div>';
+ });
+ view.innerHTML=h;
+}
+
+function radio(name,val,cur,label){return '<label><input type="radio" name="'+name+'" value="'+val+'"'+(val===cur?' checked':'')+'> '+esc(label)+'</label>'}
+function renderSet(){
+ var st=state.settings,h='';
+ h+='<div class="set"><h3>'+esc(t('units'))+'</h3><div class="opts">'+radio('unit','lb',st.unit,'lb')+radio('unit','kg',st.unit,'kg')+'</div></div>';
+ h+='<div class="set"><h3>'+esc(t('inc'))+' ('+st.unit+')</h3><input id="inc" inputmode="decimal" style="max-width:120px" value="'+esc(nfmt(inc()))+'"></div>';
+ h+='<div class="set"><h3>'+esc(t('block'))+'</h3><div class="opts" style="flex-direction:column">'+
+  radio('block','std',st.block,t('bStd'))+radio('block','strength',st.block,t('bStrength'))+radio('block','volume',st.block,t('bVolume'))+radio('block','start',st.block,t('bStart'))+'</div></div>';
+ h+='<div class="set"><h3>'+esc(t('language'))+'</h3><div class="opts">'+radio('lang','en',lang,'English')+radio('lang','pl',lang,'Polski')+'</div></div>';
+ h+='<div class="set"><h3>'+esc(t('backup'))+'</h3><p class="muted">'+esc(t('backupNote'))+'</p><div class="btnrow">'+
+  '<button type="button" class="btn" id="expbtn">'+esc(t('exp'))+'</button>'+
+  '<button type="button" class="btn ghost" id="impbtn">'+esc(t('imp'))+'</button>'+
+  '<input type="file" id="impfile" accept="application/json,.json" hidden></div></div>';
+ h+='<div class="set"><button type="button" class="btn danger" id="resetbtn">'+esc(t('reset'))+'</button></div>';
+ view.innerHTML=h;
+}
+
+/* ---------- events ---------- */
+document.querySelector('.tabs').addEventListener('click',function(e){var b=e.target.closest('[data-tab]');if(b){tab=b.dataset.tab;render();window.scrollTo(0,0)}});
+document.getElementById('langbtn').addEventListener('click',function(){lang=lang==='pl'?'en':'pl';state.settings.lang=lang;persist();render()});
+
+view.addEventListener('click',function(e){
+ var wk=e.target.closest('[data-wk]');
+ if(wk){var d=draft();if(d.workout!==wk.dataset.wk){d.workout=wk.dataset.wk;d.values={};persist();render()}return}
+ if(e.target.id==='savebtn'){saveWorkout();return}
+ var del=e.target.closest('[data-del]');
+ if(del){if(confirm(t('confirmDel'))){var id=num(del.dataset.del);state.sessions=state.sessions.filter(function(x){return x.id!==id});persist();render()}return}
+ if(e.target.id==='expbtn'){exportData();return}
+ if(e.target.id==='impbtn'){document.getElementById('impfile').click();return}
+ if(e.target.id==='resetbtn'){if(confirm(t('confirmReset'))){state=defaults();persist();render()}return}
+});
+
+view.addEventListener('input',function(e){
+ var el=e.target;
+ if(el.id==='date'){draft().date=el.value;persist();return}
+ if(el.id==='inc'){var v=num(el.value);if(v>0){if(unit()==='kg')state.settings.incKg=v;else state.settings.incLb=v;persist()}return}
+ var card=el.closest('[data-slot]');
+ if(card&&el.dataset.k&&el.dataset.k!=='ex'){
+  var d=draft(),sl=card.dataset.slot;
+  d.values[sl]=d.values[sl]||{};
+  d.values[sl][el.dataset.k]=el.value;
+  persist();
+ }
+});
+
+view.addEventListener('change',function(e){
+ var el=e.target;
+ if(el.dataset.k==='ex'){
+  var d=draft(),sl=el.closest('[data-slot]').dataset.slot;
+  state.settings.variants[d.workout][sl]=el.value;
+  d.values[sl]={ex:el.value};
+  persist();render();return;
+ }
+ if(el.name==='unit'){state.settings.unit=el.value;if(state.draft)state.draft.values={};persist();render();return}
+ if(el.name==='block'){state.settings.block=el.value;persist();return}
+ if(el.name==='lang'){lang=el.value;state.settings.lang=lang;persist();render();return}
+ if(el.id==='impfile'&&el.files[0]){importData(el.files[0]);el.value=''}
+});
+
+function saveWorkout(){
+ var d=draft(),entries=[],err='';
+ view.querySelectorAll('[data-slot]').forEach(function(card){
+  if(err)return;
+  var ex=card.querySelector('[data-k=ex]').value;
+  var w=num(card.querySelector('[data-k=w]').value),s1=num(card.querySelector('[data-k=s1]').value),s2=num(card.querySelector('[data-k=s2]').value);
+  if(isNaN(s1)&&isNaN(s2))return;
+  if(isNaN(s1)||s1<0){err=t('needS1',{x:exName(ex)});return}
+  if(isNaN(w)||w<0){if(CAT[ex].bw)w=0;else{err=t('needW',{x:exName(ex)});return}}
+  entries.push({slot:CAT[ex].slot,ex:ex,w:w,s1:Math.round(s1),s2:isNaN(s2)||s2<0?null:Math.round(s2)});
+ });
+ if(!err&&!entries.length)err=t('nothing');
+ if(err){document.getElementById('err').textContent=err;return}
+ state.sessions.push({id:Date.now(),date:d.date||today(),workout:d.workout,unit:unit(),entries:entries});
+ state.draft=null;persist();
+ toast(t('saved'));render();window.scrollTo(0,0);
+}
+
+function exportData(){
+ var data=JSON.stringify({app:'2x2-tracker',v:1,settings:state.settings,sessions:state.sessions},null,1);
+ var a=document.createElement('a');
+ a.href=URL.createObjectURL(new Blob([data],{type:'application/json'}));
+ a.download='2x2-tracker-backup-'+today()+'.json';
+ document.body.appendChild(a);a.click();
+ setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},500);
+}
+function importData(file){
+ var r=new FileReader();
+ r.onload=function(){
+  var raw;try{raw=JSON.parse(r.result)}catch(e){raw=null}
+  if(!raw||raw.app!=='2x2-tracker'||!Array.isArray(raw.sessions)){alert(t('badFile'));return}
+  if(!confirm(t('confirmImp')))return;
+  state=merge(defaults(),{settings:raw.settings,sessions:raw.sessions});
+  if(state.settings.lang)lang=state.settings.lang;
+  persist();toast(t('imported'));render();
+ };
+ r.readAsText(file);
+}
+
+/* ---------- rest timer ---------- */
+var endAt=null,tick=null,actx=null,clock=document.getElementById('clock'),timerEl=document.getElementById('timer');
+function showClock(sec){clock.textContent=Math.floor(sec/60)+':'+String(sec%60).padStart(2,'0')}
+function beep(){
+ try{
+  if(!actx)return;
+  [0,0.35,0.7].forEach(function(o){var g=actx.createGain(),osc=actx.createOscillator();osc.frequency.value=880;osc.connect(g);g.connect(actx.destination);
+   g.gain.setValueAtTime(0.2,actx.currentTime+o);g.gain.exponentialRampToValueAtTime(0.001,actx.currentTime+o+0.25);osc.start(actx.currentTime+o);osc.stop(actx.currentTime+o+0.26)});
+ }catch(e){}
+}
+function stopTimer(){clearInterval(tick);tick=null;endAt=null;clock.classList.remove('run');showClock(0)}
+function startTimer(sec){
+ try{if(!actx){var AC=window.AudioContext||window.webkitAudioContext;if(AC)actx=new AC()}if(actx&&actx.state==='suspended')actx.resume()}catch(e){}
+ timerEl.classList.remove('done');
+ endAt=Date.now()+sec*1000;clock.classList.add('run');clearInterval(tick);
+ var step=function(){
+  var left=Math.max(0,Math.ceil((endAt-Date.now())/1000));showClock(left);
+  if(left<=0){stopTimer();timerEl.classList.add('done');beep();if(navigator.vibrate)navigator.vibrate([250,120,250]);toast(t('rest'))}
+ };
+ step();tick=setInterval(step,250);
+}
+timerEl.addEventListener('click',function(e){
+ var b=e.target.closest('[data-rest]');if(b){startTimer(+b.dataset.rest);return}
+ if(e.target.id==='stopbtn'){stopTimer();timerEl.classList.remove('done')}
+});
+
+render();
+})();
+</script>
+</body>
+</html>
